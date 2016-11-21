@@ -3,18 +3,22 @@
 import argparse
 from ltp import Ltp
 import json
+import neo4j_methods as neo4j
 
 class Db(object):
     def find_from_entity(self, edge):
-        return 'from_entity <- ' + str(edge)
+        return neo4j.find_from_entity(edge)
+        # return 'from_entity <- ' + str(edge)
 
     def find_to_entity(self, edge):
-        return 'to_entity <- ' + str(edge)
+        return neo4j.find_to_entity(edge)
+        # return 'to_entity <- ' + str(edge)
 
     def find_relations(self, relation_name, **kwargs):
-        edge = {'relation' : 'relation_name ' + relation_name + str(kwargs.items()), 'IO':'abc'}
-        print edge
-        return [edge]
+        return neo4j.find_edges(relation_name, kwargs)
+        # edge = {'relation' : 'relation_name ' + relation_name + str(kwargs.items()), 'IO':'abc'}
+        # print edge
+        # return [edge]
 
 
 class Word(object):
