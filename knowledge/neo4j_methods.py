@@ -1,6 +1,5 @@
 #coding=utf8
 
-import ipdb; ipdb.set_trace()
 from neo4j.v1 import GraphDatabase, basic_auth
 
 driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "junlinguzhong"))
@@ -73,13 +72,16 @@ def find_edges(edge_name, from_entity_name=None, to_entity_name=None, **kwargs):
   else:
     clause += ")-[r:%s" % edge_name
 
-  clause += "{ "
+  if kwargs:
+    clause += "{ "
 
-  for key in kwargs:
-    clause += "%s: '%s', " % (key, kwargs[key])
+    for key in kwargs:
+      clause += "%s: '%s', " % (key, kwargs[key])
 
-  clause = clause[:-2]
-  clause += " }]->(obj"
+    clause = clause[:-2]
+    clause += " }]->(obj"
+  else:
+    clause += "]->(obj"
 
   if to_entity_name:
     clause += " { name: '%s'}) RETURN r, r.name AS name" % to_entity_name
@@ -91,7 +93,7 @@ def find_edges(edge_name, from_entity_name=None, to_entity_name=None, **kwargs):
   return retained_result
 
 def find_from_entity(edge):
-  name = edge.name
+  name = edge['name']
 
   clause = "MATCH (sub)-[r:%s]->(obj) RETURN sub AS entity, sub.name AS name" % name
   
@@ -101,7 +103,7 @@ def find_from_entity(edge):
   return retained_result
 
 def find_to_entity(edge):
-  name = edge.name
+  name = edge['name']
 
   clause = "MATCH (sub)-[r:%s]->(obj) RETURN obj AS entity, obj.name AS name" % name
   
@@ -111,4 +113,4 @@ def find_to_entity(edge):
   return retained_result
 
 if __name__ == '__main__':
-    print(find_edges(u'送'))
+    print(find_to_entity({'name': u'送'}))
