@@ -1,7 +1,7 @@
 # coding=utf8
 
 import argparse
-from ltp import nlpAPI
+from ltp import Ltp
 import json
 
 class Db(object):
@@ -68,7 +68,7 @@ class Word(object):
 
 class Query(object):
     def lookup(self, text):
-        api = nlpAPI()
+        api = Ltp()
         res = api.call(text, 'all')
         body = json.loads(res)
         return ', '.join(self.query(body))
