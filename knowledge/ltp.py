@@ -6,7 +6,7 @@ import json
 
 API_KEY = 'K8L7C0w9yxVGAK3Q7q3euHtsbtfzOgMsya4Fyb8x'
 
-class nlpAPI(object):
+class Ltp(object):
 
     def call(self, text, pattern):
         return urllib.urlopen(self.get_url(text, pattern)).read()
@@ -27,9 +27,9 @@ def handle_request(response):
         for sentence in paragraph:
             for word in sentence:
                 print word
-                print word['id']
-                print word['cont']
-#
+
+    return body
+
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
@@ -38,5 +38,5 @@ if __name__ == '__main__':
     parser.add_argument(
         'pattern', help='pattern = dp, sdp, srl or all')
     args = parser.parse_args()
-    api = nlpAPI()
+    api = Ltp()
     handle_request(api.call(args.text, args.pattern))
