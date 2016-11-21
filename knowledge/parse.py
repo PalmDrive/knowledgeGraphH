@@ -55,10 +55,16 @@ class GraphBuilder(object):
             neo4j.create_entity({'name': indirect_obj.get_content()})
 
         if subj and direct_obj and verb:
-            neo4j.create_edge()
+
+            neo4j.create_edge(
+                subj.get_content(),
+                direct_obj.get_content(),
+                {'name': verb.get_content()}
+            )
 
             if indirect_obj:
-
+                neo4j.set_edge(
+                verb.get_content(), {'IO': indirect_obj.get_content()})
 
 
 if __name__ == '__main__' and __package__ is None:
