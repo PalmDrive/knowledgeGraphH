@@ -14,8 +14,8 @@ class Db(object):
         return neo4j.find_to_entity(edge)
         # return 'to_entity <- ' + str(edge)
 
-    def find_relations(self, relation_name, **kwargs):
-        return neo4j.find_edges(relation_name, kwargs)
+    def find_relations(self, relation_name, from_entity_name=None, to_entity_name=None, **kwargs):
+        return neo4j.find_edges(relation_name, from_entity_name, to_entity_name, **kwargs)
         # edge = {'relation' : 'relation_name ' + relation_name + str(kwargs.items()), 'IO':'abc'}
         # print edge
         # return [edge]
@@ -122,9 +122,11 @@ class Query(object):
 
             for relation in relations:
                 if subj and subj.is_unknown_word():
-                    ans.append(db.find_from_entity(relation))
+                    entity = db.find_from_entity(relation)[0]
+                    ans.append(entity['name'])
                 elif direct_obj and direct_obj.is_unknown_word():
-                    ans.append(db.find_to_entity(relation))
+                    entity = db.find_to_entity(relation)[0]
+                    ans.append(entity['name'])
                 elif indirect_obj and indirect_obj.is_unknown_word():
                     ans.append(relation["IO"])
 

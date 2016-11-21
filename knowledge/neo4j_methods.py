@@ -72,22 +72,24 @@ def find_edges(edge_name, from_entity_name=None, to_entity_name=None, **kwargs):
   else:
     clause += ")-[r:%s" % edge_name
 
+  condition = ""
   if kwargs:
-    clause += "{ "
-
     for key in kwargs:
-      clause += "%s: '%s', " % (key, kwargs[key])
+      if kwargs[key]:
+        condition += "%s: '%s', " % (key, kwargs[key])
 
-    clause = clause[:-2]
-    clause += " }]->(obj"
+  if len(condition) > 0:
+    condition = condition[:-2]
+    clause += "{ " + condition + " }]->(obj"
   else:
     clause += "]->(obj"
 
   if to_entity_name:
-    clause += " { name: '%s'}) RETURN r, r.name AS name" % to_entity_name
+    clause += " { name: '%s'}) RETURN r, r.name AS name, r.IO AS IO" % to_entity_name
   else:
-    clause += ") RETURN r, r.name AS name"
+    clause += ") RETURN r, r.name AS name, r.IO AS IO"
 
+  # print 'clause : ' + clause
   result = session.run(clause)
   retained_result = list(result)
   return retained_result
@@ -107,6 +109,7 @@ def find_to_entity(edge):
 
   clause = "MATCH (sub)-[r:%s]->(obj) RETURN obj AS entity, obj.name AS name" % name
 
+  # print 'clause : ' + clause
   session = driver.session()
   result = session.run(clause)
   retained_result = list(result)
