@@ -7,33 +7,32 @@ driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "junl
 # properties = {"name": value, key: value, ...}
 def create_entity(properties):
   session = driver.session()
-  clause = "CREATE (n {name: {name}"
+  clause = "MERGE (n {name: {name}"
 
-  for key, value in properties:
+  for key in properties:
     if key != "name":
       clause += ", %s: {%s}" % key
   
-  clause += "}) RETURN n"
+  clause += "}) RETURN n, n.name AS name"
   
   result = session.run(clause, properties)
   retained_result = list(result)
   session.close()
   return retained_result
 
-def create_edge(from_node, to_node, properties):
+def create_edge(from_entity_name, to_entity_name, properties):
   session = driver.session()
-  clause = "MATCH (a),(b) WHERE a.name = '%s' AND b.name = '%s' CREATE (a)-[r:{name} {name: {name}" % (from_node, to_node)
+  clause = "MATCH (a),(b) WHERE a.name = '%s' AND b.name = '%s' CREATE (a)-[r:{name} {name: {name}" % (from_entity_name, to_entity_name)
 
-  for key, value in properties:
+  for key in properties:
     if key != "name":
       clause += ", %s: {%s}" % key
 
-  clause += "}]->(b) RETURN r"
-  
-  result = session.run(clause, properties)
-  retained_result = list(result)
+  clause += "}]->(b)"
+  print(clause)
+  session.run(clause, properties)
   session.close()
-  return retained_result
+  return
 
 def set_entity(entity_name, properties):
   session = driver.session()
@@ -108,4 +107,4 @@ def find_to_entity(edge):
   return retained_result
 
 if __name__ == '__main__':
-    create_entity({name: "花"})
+    print(create_edge('草', '花', {'name': '送'}))
