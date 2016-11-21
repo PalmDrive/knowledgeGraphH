@@ -96,7 +96,7 @@ def find_from_entity(edge):
   name = edge['name']
 
   clause = "MATCH (sub)-[r:%s]->(obj) RETURN sub AS entity, sub.name AS name" % name
-  
+
   session = driver.session()
   result = session.run(clause)
   retained_result = list(result)
@@ -106,7 +106,7 @@ def find_to_entity(edge):
   name = edge['name']
 
   clause = "MATCH (sub)-[r:%s]->(obj) RETURN obj AS entity, obj.name AS name" % name
-  
+
   session = driver.session()
   result = session.run(clause)
   retained_result = list(result)

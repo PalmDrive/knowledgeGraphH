@@ -2,7 +2,7 @@ import argparse
 from ltp import Ltp
 from ltp import handle_request
 from query import Word
-
+import neo4j_methods as neo4j
 
 class GraphBuilder(object):
     def __init__(self):
@@ -25,7 +25,40 @@ class GraphBuilder(object):
 
     def build(self):
         # call neo4j
-        pass
+        subj = None
+        verb = None
+        direct_obj = None
+        indirect_obj = None
+
+        for _, word in self.words.items():
+            if word.is_subject():
+                subj = word
+                continue
+
+            if word.is_direct_object():
+                direct_obj = word
+                continue
+
+            if word.is_indirect_object():
+               indirect_obj = word
+
+            if word.is_relation():
+                verb = word
+
+        if subj:
+            neo4j.create_entity({'name': subj.get_content()})
+
+        if direct_obj:
+            neo4j.create_entity({'name': direct_obj.get_content()})
+
+        if indirect_obj:
+            neo4j.create_entity({'name': indirect_obj.get_content()})
+
+        if subj and direct_obj and verb:
+            neo4j.create_edge()
+
+            if indirect_obj:
+
 
 
 if __name__ == '__main__' and __package__ is None:
@@ -36,3 +69,4 @@ if __name__ == '__main__' and __package__ is None:
     args = parser.parse_args()
     gb = GraphBuilder()
     gb.parse(args.text)
+    gb.build()
