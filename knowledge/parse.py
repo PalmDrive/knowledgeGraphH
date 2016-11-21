@@ -10,9 +10,9 @@ class GraphBuilder(object):
         pass
 
     def parse(self, text):
-        result = handle_request(self.ltp.call(text, "all"))
+        self.result = handle_request(self.ltp.call(text, "all"))
         pp = pprint.PrettyPrinter(indent=2)
-        pp.pprint(result)
+
 
 
 

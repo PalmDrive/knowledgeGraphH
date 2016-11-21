@@ -1,5 +1,6 @@
 #coding=utf8
 
+import ipdb; ipdb.set_trace()
 from neo4j.v1 import GraphDatabase, basic_auth
 
 driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "junlinguzhong"))
@@ -12,9 +13,9 @@ def create_entity(properties):
   for key in properties:
     if key != "name":
       clause += ", %s: {%s}" % key
-  
+
   clause += "}) RETURN n, n.name AS name"
-  
+
   result = session.run(clause, properties)
   retained_result = list(result)
   session.close()
@@ -91,7 +92,7 @@ def find_edges(edge_name, from_entity_name=None, to_entity_name=None, **kwargs):
 def find_from_entity(edge):
   name = edge.name
   clause = "MATCH (sub)-[r:'%s']->(obj) RETURN sub AS entity, sub.name AS name" % name
-  
+
   session = driver.session()
   result = session.run(clause)
   retained_result = list(result)
@@ -100,7 +101,7 @@ def find_from_entity(edge):
 def find_to_entity(edge):
   name = edge.name
   clause = "MATCH (sub)-[r:'%s']->(obj) RETURN obj AS entity, obj.name AS name" % name
-  
+
   session = driver.session()
   result = session.run(clause)
   retained_result = list(result)
