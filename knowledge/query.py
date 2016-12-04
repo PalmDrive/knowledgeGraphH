@@ -75,7 +75,11 @@ class Query(object):
         api = Ltp()
         res = api.call(text, 'all')
         body = json.loads(res)
-        return ', '.join(self.query(body))
+        ans = self.query(body)
+        if len(ans) > 0:
+            return ', '.join(ans)
+        else:
+            return u'我不知道'
 
     def query(self, body):
         subj = None
