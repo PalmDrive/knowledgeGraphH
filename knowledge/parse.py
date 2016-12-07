@@ -29,27 +29,34 @@ class GraphBuilder(object):
     def parse_srl(self, text):
         self.parse(text)
 
-    def build_dp(self):
+    def extract_dp(self):
         # call neo4j
         subj = None
         verb = None
         direct_obj = None
         indirect_obj = None
 
-        for _, word in self.words.items():
-            if word.is_subject():
-                subj = word
-                continue
+        for sentence in self.sentences:
+            for _, word in sentence.words_dict().items():
+                if word.is_subject():
+                    subj = word
+                    continue
 
-            if word.is_direct_object():
-                direct_obj = word
-                continue
+                if word.is_direct_object():
+                    direct_obj = word
+                    continue
 
-            if word.is_indirect_object():
-               indirect_obj = word
+                if word.is_indirect_object():
+                   indirect_obj = word
 
-            if word.is_relation():
-                verb = word
+                if word.is_relation():
+                    verb = word
+
+        yield subj, verb, direct_obj, indirect_obj
+
+    def build_dp(self):
+
+        subj, verb, direct_obj, indirect_obj = self.extract_dp()
 
         if subj:
             graph_db.create_entity({'name': subj.get_content()})
@@ -61,7 +68,6 @@ class GraphBuilder(object):
             graph_db.create_entity({'name': indirect_obj.get_content()})
 
         if subj and direct_obj and verb:
-
             graph_db.create_edge(
                 subj.get_content(),
                 direct_obj.get_content(),
@@ -72,7 +78,7 @@ class GraphBuilder(object):
                 graph_db.set_edge(
                 verb.get_content(), {'IO': indirect_obj.get_content()})
 
-    def build_srl(self):
+    def extract_srl(self):
         # call neo4j
         for sentence in self.sentences:
             for _, word in sentence.words_dict().items():
@@ -96,14 +102,19 @@ class GraphBuilder(object):
                                 print 'A1', A1
 
                         if len(A0) > 0 and len(A1) > 0:
-                            graph_db.create_entity({'name': A0})
-                            graph_db.create_entity({'name': A1})
+                            yield A0, verb, A1
 
-                            graph_db.create_edge(
-                                A0,
-                                A1,
-                                {'name': verb}
-                            )
+    def build_srl(self):
+        results = self.extract_srl()
+        for A0, verb, A1 in results:
+            graph_db.create_entity({'name': A0})
+            graph_db.create_entity({'name': A1})
+
+            graph_db.create_edge(
+                A0,
+                A1,
+                {'name': verb}
+            )
 
 
 if __name__ == '__main__' and __package__ is None:

@@ -1,5 +1,7 @@
 # coding=utf8
 
+UNKNOWN_WORDS = [u'谁',u'什么',u'怎么',u'怎么样',u'为什么',u'哪个']
+
 class Word(object):
     def __init__(self, dict):
         self.word = dict
@@ -31,7 +33,7 @@ class Word(object):
         return self.word['relate'] == 'CMP'
 
     def is_unknown_word(self):
-        return self.word['cont'] in [u'谁',u'什么',u'怎么',u'怎么样',u'为什么',u'哪个']
+        return self.word['cont'] in UNKNOWN_WORDS
 
     def get_content(self):
         return self.word['cont']
@@ -53,3 +55,9 @@ class Word(object):
 
     def is_verb(self):
         return self.word['pos'] == 'v'
+
+def has_unknown_word(text):
+    for w in UNKNOWN_WORDS:
+        if w in text:
+            return True
+    return False

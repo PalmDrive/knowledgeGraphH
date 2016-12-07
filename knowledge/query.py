@@ -5,6 +5,8 @@ from ltp import Ltp
 import json
 import neo4j_methods as neo4j
 from knowledge.model.word import Word
+from knowledge.model.word import has_unknown_word
+from parse import GraphBuilder
 
 class Db(object):
     def find_from_entity(self, edge):
@@ -25,67 +27,67 @@ class Db(object):
 
 class Query(object):
     def lookup(self, text):
-        api = Ltp()
-        res = api.call(text, 'all')
-        body = json.loads(res)
-        ans = self.query(body)
+        ans = self.query(text)
         if len(ans) > 0:
             return ', '.join(ans)
         else:
             return u'我不知道'
 
-    def query(self, body):
-        subj = None
-        verb = None
-        direct_obj = None
-        indirect_obj = None
+    def query(self, text):
+        return self.query_srl(text)
 
-        words = {}
-        for paragraph in body:
-            for sentence in paragraph:
-                for word in sentence:
-                    w = Word(word)
-                    words[w.id()] = w
-
-        for id, w in words.items():
-            parent = words.get(w.parent_id())
-            # print id
-            # print 'parent : ' + str(w.parent_id())
-            # if parent:
-            #     print str(parent.id())
-            w.set_parent(parent)
-
-        for id, w in words.items():
-            if w.is_subject():
-                subj = w
-            elif w.is_relation():
-                verb = w
-            elif w.is_direct_object():
-                direct_obj = w
-            elif w.is_indirect_object():
-                indirect_obj = w
-
-
+    def query_srl(self, text):
         db = Db()
-
         ans = []
-        if verb and not verb.is_unknown_word():
-            from_entity_name = subj.get_content() if subj and not subj.is_unknown_word() else None
-            to_entity_name = direct_obj.get_content() if direct_obj and not direct_obj.is_unknown_word() else None
-            IO = indirect_obj.get_content() if indirect_obj and not indirect_obj.is_unknown_word() else None
 
-            relations = db.find_relations(verb.get_content(), from_entity_name=from_entity_name, to_entity_name=to_entity_name,
-                                          IO=IO)
+        gb = GraphBuilder()
+        gb.parse_srl(text)
+        results = gb.extract_srl()
 
-            for relation in relations:
-                if subj and subj.is_unknown_word():
-                    entity = db.find_from_entity(relation)[0]
-                    ans.append(entity['name'])
-                elif direct_obj and direct_obj.is_unknown_word():
-                    entity = db.find_to_entity(relation)[0]
-                    ans.append(entity['name'])
-                elif indirect_obj and indirect_obj.is_unknown_word():
-                    ans.append(relation["IO"])
+        for A0, verb, A1 in results:
+            if verb and not has_unknown_word(verb):
+                from_entity_name = A0 if has_unknown_word(A0) else None
+                to_entity_name = A1 if not has_unknown_word(A1) else None
+
+                relations = db.find_relations(verb.get_content(), from_entity_name=from_entity_name,
+                                              to_entity_name=to_entity_name)
+
+                for relation in relations:
+                    if A0 and has_unknown_word(A0):
+                        entity = db.find_from_entity(relation)[0]
+                        ans.append(entity['name'])
+                    elif A1 and has_unknown_word(A1):
+                        entity = db.find_to_entity(relation)[0]
+                        ans.append(entity['name'])
+
+        return ans
+
+    def query_dp(self, text):
+        db = Db()
+        ans = []
+        gb = GraphBuilder()
+        gb.parse_dp(text)
+        results = gb.extract_srl()
+
+        for subj, verb, direct_obj, indirect_obj in results:
+
+            if verb and not verb.is_unknown_word():
+                from_entity_name = subj.get_content() if subj and not subj.is_unknown_word() else None
+                to_entity_name = direct_obj.get_content() if direct_obj and not direct_obj.is_unknown_word() else None
+                IO = indirect_obj.get_content() if indirect_obj and not indirect_obj.is_unknown_word() else None
+
+                relations = db.find_relations(verb.get_content(), from_entity_name=from_entity_name, to_entity_name=to_entity_name,
+                                              IO=IO)
+
+                for relation in relations:
+                    if subj and subj.is_unknown_word():
+                        entity = db.find_from_entity(relation)[0]
+                        ans.append(entity['name'])
+                    elif direct_obj and direct_obj.is_unknown_word():
+                        entity = db.find_to_entity(relation)[0]
+                        ans.append(entity['name'])
+                    elif indirect_obj and indirect_obj.is_unknown_word():
+                        ans.append(relation["IO"])
 
         return ans
 
