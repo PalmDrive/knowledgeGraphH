@@ -93,15 +93,14 @@ class GraphBuilder(object):
                                 begin = arg.get('beg')
                                 end = arg.get('end')
                                 A0 = sentence.combined_words(begin, end)
-                                print 'A0', A0
 
                             if 'A1' in arg.get('type'):
                                 begin = arg.get('beg')
                                 end = arg.get('end')
                                 A1 = sentence.combined_words(begin, end)
-                                print 'A1', A1
 
                         if len(A0) > 0 and len(A1) > 0:
+                            print 'A0 ', A0, 'A1 ', A1, 'v ', verb
                             yield A0, verb, A1
 
     def build_srl(self):

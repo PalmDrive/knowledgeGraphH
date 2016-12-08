@@ -1,11 +1,8 @@
 # coding=utf8
 
 import argparse
-from ltp import Ltp
-import json
 import neo4j_methods as neo4j
-from knowledge.model.word import Word
-from knowledge.model.word import has_unknown_word
+from model.word import has_unknown_word
 from parse import GraphBuilder
 
 class Db(object):
@@ -46,19 +43,20 @@ class Query(object):
 
         for A0, verb, A1 in results:
             if verb and not has_unknown_word(verb):
-                from_entity_name = A0 if has_unknown_word(A0) else None
+                from_entity_name = A0 if not has_unknown_word(A0) else None
                 to_entity_name = A1 if not has_unknown_word(A1) else None
 
-                relations = db.find_relations(verb.get_content(), from_entity_name=from_entity_name,
+                print 'from ', from_entity_name, 'rel ', verb, 'to ', to_entity_name
+                relations = db.find_relations(verb, from_entity_name=from_entity_name,
                                               to_entity_name=to_entity_name)
 
                 for relation in relations:
                     if A0 and has_unknown_word(A0):
-                        entity = db.find_from_entity(relation)[0]
-                        ans.append(entity['name'])
+                        from_name = relation['from_name']
+                        ans.append(from_name )
                     elif A1 and has_unknown_word(A1):
-                        entity = db.find_to_entity(relation)[0]
-                        ans.append(entity['name'])
+                        to_name = relation['to_name']
+                        ans.append(to_name)
 
         return ans
 
