@@ -1,3 +1,4 @@
+#coding=utf8
 import argparse
 
 import neo4j_methods as graph_db
@@ -10,6 +11,9 @@ class GraphBuilder(object):
     def __init__(self):
         self.ltp = Ltp()
         pass
+
+    def trim_punc(self, text):
+        return text.rstrip(u'?？:：!！.。,，;；')
 
     def parse(self, text):
         result = handle_request(self.ltp.call(text, "srl"))
@@ -92,12 +96,12 @@ class GraphBuilder(object):
                             if 'A0' in arg.get('type'):
                                 begin = arg.get('beg')
                                 end = arg.get('end')
-                                A0 = sentence.combined_words(begin, end)
+                                A0 = self.trim_punc(sentence.combined_words(begin, end))
 
                             if 'A1' in arg.get('type'):
                                 begin = arg.get('beg')
                                 end = arg.get('end')
-                                A1 = sentence.combined_words(begin, end)
+                                A1 = self.trim_punc(sentence.combined_words(begin, end))
 
                         if len(A0) > 0 and len(A1) > 0:
                             print 'A0 ', A0, 'A1 ', A1, 'v ', verb
