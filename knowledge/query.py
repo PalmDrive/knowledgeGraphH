@@ -21,7 +21,6 @@ class Db(object):
         # return [edge]
 
 
-
 class Query(object):
     def lookup(self, text):
         ans = self.query(text)

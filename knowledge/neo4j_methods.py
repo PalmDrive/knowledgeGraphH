@@ -1,8 +1,9 @@
 #coding=utf8
 
 from neo4j.v1 import GraphDatabase, basic_auth
+from knowledge.config import CONFIG
 
-driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth("neo4j", "junlinguzhong"))
+driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth(CONFIG.NEO4J_USERNAME, CONFIG.NEO4J_PASSWORD))
 
 # properties = {"name": value, key: value, ...}
 def create_entity(properties):
