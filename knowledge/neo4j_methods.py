@@ -1,122 +1,141 @@
 #coding=utf8
 
 from neo4j.v1 import GraphDatabase, basic_auth
-from knowledge.config import CONFIG
 
-driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth(CONFIG.NEO4J_USERNAME, CONFIG.NEO4J_PASSWORD))
+from knowledge.config.config import CONFIG
 
-# properties = {"name": value, key: value, ...}
-def create_entity(properties):
-  session = driver.session()
-  clause = "MERGE (n {name: {name}"
+class Neo4jManager(object):
+  def __init__(self):
+    self.driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth(CONFIG.NEO4J_USERNAME, CONFIG.NEO4J_PASSWORD))
+    self.session = self.driver.session()
 
-  for key in properties:
-    if key != "name":
-      clause += ", %s: {%s}" % key
+  def close(self):
+    self.session.close()
 
-  clause += "}) RETURN n, n.name AS name"
+  # properties = {"name": value, key: value, ...}
+  def create_entity(self, properties):
 
-  result = session.run(clause, properties)
-  retained_result = list(result)
-  session.close()
-  return retained_result
+    clause = "MERGE (n {name: {name}"
 
-def create_edge(from_entity_name, to_entity_name, properties):
-  session = driver.session()
-  clause = "MATCH (a),(b) WHERE a.name = '%s' AND b.name = '%s' CREATE (a)-[r:%s {name: {name}" % (from_entity_name, to_entity_name, properties['name'])
+    for key in properties:
+      if key != "name":
+        clause += ", %s: {%s}" % key
 
-  for key in properties:
-    if key != "name":
-      clause += ", %s: {%s}" % key
+    clause += "}) RETURN n, n.name AS name"
 
-  clause += "}]->(b) RETURN r, r.name AS name"
+    result = self.session.run(clause, properties)
+    retained_result = list(result)
 
-  result = session.run(clause, properties)
-  retained_result = list(result)
-  session.close()
-  return retained_result
+    return retained_result
 
-def set_entity(entity_name, properties):
-  session = driver.session()
-  clause = "MATCH (n { name: '%s' }) SET " % entity_name
-  for key in properties:
-    clause += "n.%s = '%s', " % (key, properties[key])
+  def create_edge(self, from_entity_name, to_entity_name, properties):
+    clause = "MATCH (a),(b) WHERE a.name = '%s' AND b.name = '%s' CREATE (a)-[r:%s {name: {name}" % (from_entity_name, to_entity_name, properties['name'])
 
-  clause = clause[:-2]
-  clause += " RETURN n, n.name AS name"
+    for key in properties:
+      if key != "name":
+        clause += ", %s: {%s}" % key
 
-  result = session.run(clause)
-  retained_result = list(result)
-  session.close()
-  return retained_result
+    clause += "}]->(b) RETURN r, r.name AS name"
 
-def set_edge(edge_name, properties):
-  session = driver.session()
-  clause = "MATCH (sub)-[r:%s]->(obj) SET " % edge_name
-  for key in properties:
-    clause += "r.%s = '%s', " % (key, properties[key])
+    result = self.session.run(clause, properties)
+    retained_result = list(result)
+    return retained_result
 
-  clause = clause[:-2]
-  clause += " RETURN r, r.name AS name"
+  def set_entity(self, entity_name, properties):
+    clause = "MATCH (n { name: '%s' }) SET " % entity_name
+    for key in properties:
+      clause += "n.%s = '%s', " % (key, properties[key])
 
-  result = session.run(clause)
-  retained_result = list(result)
-  session.close()
-  return retained_result
+    clause = clause[:-2]
+    clause += " RETURN n, n.name AS name"
 
-def find_edges(edge_name, from_entity_name=None, to_entity_name=None, **kwargs):
-  session = driver.session()
-  clause = "MATCH (sub"
+    result = self.session.run(clause)
+    retained_result = list(result)
+    return retained_result
 
-  if from_entity_name:
-    clause += " { name: '%s'})-[r:%s" % (from_entity_name, edge_name)
-  else:
-    clause += ")-[r:%s" % edge_name
+  def set_edge(self, edge_name, properties):
+    clause = "MATCH (sub)-[r:%s]->(obj) SET " % edge_name
+    for key in properties:
+      clause += "r.%s = '%s', " % (key, properties[key])
 
-  condition = ""
-  if kwargs:
-    for key in kwargs:
-      if kwargs[key]:
-        condition += "%s: '%s', " % (key, kwargs[key])
+    clause = clause[:-2]
+    clause += " RETURN r, r.name AS name"
 
-  if len(condition) > 0:
-    condition = condition[:-2]
-    clause += "{ " + condition + " }]->(obj"
-  else:
-    clause += "]->(obj"
+    result = self.session.run(clause)
+    retained_result = list(result)
+    return retained_result
 
-  if to_entity_name:
-    clause += " { name: '%s'})" % to_entity_name
-  else:
-    clause += ")"
+  def find_edges(self, edge_name, from_entity_name=None, to_entity_name=None, **kwargs):
+    clause = "MATCH (sub"
 
-  clause += "RETURN r.name AS edge_name, r.IO AS IO, sub.name AS from_name, obj.name AS to_name"
+    if from_entity_name:
+      clause += " { name: '%s'})-[r:%s" % (from_entity_name, edge_name)
+    else:
+      clause += ")-[r:%s" % edge_name
 
-  print 'clause : ' + clause
-  result = session.run(clause)
-  retained_result = list(result)
-  return retained_result
+    condition = ""
+    if kwargs:
+      for key in kwargs:
+        if kwargs[key]:
+          condition += "%s: '%s', " % (key, kwargs[key])
 
-def find_from_entity(edge):
-  name = edge['name']
+    if len(condition) > 0:
+      condition = condition[:-2]
+      clause += "{ " + condition + " }]->(obj"
+    else:
+      clause += "]->(obj"
 
-  clause = "MATCH (sub)-[r:%s]->(obj) RETURN sub AS entity, sub.name AS name" % name
+    if to_entity_name:
+      clause += " { name: '%s'})" % to_entity_name
+    else:
+      clause += ")"
 
-  session = driver.session()
-  result = session.run(clause)
-  retained_result = list(result)
-  return retained_result
+    clause += "RETURN r.name AS edge_name, r.IO AS IO, sub.name AS from_name, obj.name AS to_name"
 
-def find_to_entity(edge):
-  name = edge['name']
+    print 'clause : ' + clause
+    result = self.session.run(clause)
+    retained_result = list(result)
+    return retained_result
 
-  clause = "MATCH (sub)-[r:%s]->(obj) RETURN obj AS entity, obj.name AS name" % name
+  def find_from_entity(self, edge):
+    name = edge['name']
 
-  print 'clause : ' + clause
-  session = driver.session()
-  result = session.run(clause)
-  retained_result = list(result)
-  return retained_result
+    clause = "MATCH (sub)-[r:%s]->(obj) RETURN sub AS entity, sub.name AS name" % name
+
+    result = self.session.run(clause)
+    retained_result = list(result)
+    return retained_result
+
+  def find_to_entity(self, edge):
+    name = edge['name']
+
+    clause = "MATCH (sub)-[r:%s]->(obj) RETURN obj AS entity, obj.name AS name" % name
+
+    print 'clause : ' + clause
+    result = self.session.run(clause)
+    retained_result = list(result)
+    return retained_result
+
+  def find_nodes_with_labels(self, labels):
+    label_query = ""
+    for label in labels:
+      label_query += (":" + label)
+    clause = "MATCH (n%s) RETURN n, labels(n) AS labels" % label_query
+    result = self.session.run(clause)
+    retained_result = list([(r['n'], r['labels']) for r in result])
+    return retained_result
+
+  def find_nodes_with_any_values_in_properties(self, **kwargs):
+    predicates = []
+    for property in kwargs:
+      predicates.append("'"+ kwargs[property] +"' in n." + property)
+    predicate = ' OR '.join(predicates)
+    clause = "MATCH (n) WHERE %s RETURN n" % predicate
+
+    result = self.session.run(clause)
+    retained_result = list([r['n'] for r in result])
+    return retained_result
 
 if __name__ == '__main__':
-    print(find_to_entity({'name': u'送'}))
+    db = GraphDatabase()
+    print(db.find_to_entity({'name': u'送'}))

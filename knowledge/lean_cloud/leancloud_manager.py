@@ -1,8 +1,10 @@
 #coding:utf8
 
-import leancloud
 import logging
-from knowledge.config import CONFIG
+
+import leancloud
+
+from knowledge.config.config import CONFIG
 
 CLASS_NAME_MEDIA = "Media"
 CLASS_NAME_MEDIA_ENTITY = "MediaEntity"
@@ -22,6 +24,8 @@ class LeanCloudManager(object):
 
         offset = 0
         batch_size = 1000
+        if limit > 0 and batch_size > limit:
+            batch_size = limit
         result = []
         query.limit(batch_size)
 
@@ -30,7 +34,7 @@ class LeanCloudManager(object):
 
         while len(batch_result) == batch_size:
             offset += batch_size
-            if limit > 0 and offset > limit:
+            if limit > 0 and offset >= limit:
                 break
             query.skip(offset)
             batch_result = query.find()
@@ -45,7 +49,7 @@ class LeanCloudManager(object):
 
         count =  len(objects)
         while offset < count:
-            objects[offset:offset+batch_size].save_all()
+            leancloud.Object.save_all(objects[offset:offset+batch_size])
             offset += batch_size
 
     def batch_fetch_media_with_source(self, source):
@@ -54,7 +58,8 @@ class LeanCloudManager(object):
         query = Media.query.equal_to("source", source)
         limit = 0
         if CONFIG.ENV == 'development':
-            limit = 10
+            limit = 4
+
         return self.batch_fetch(query, limit)
 
     def add_media_entity_mapping(self, media_id, entity_id, keyword, weight, source):

@@ -1,9 +1,9 @@
 {
     "ENV": "production",
-    "LEANCLOUD_APP_ID": "hwB46P8KvcGH258ka0JfnMww-gzGzoHsz",
-    "LEANCLOUD_APP_KEY": "ywhqmYxpFKTyemJrFl8YYT2j",
-    "LEANCLOUD_MASTER_KEY": "Sr5rLnoJuGvTVxR3VtKOTQbK",
+    "LEANCLOUD_APP_ID": "1jvJOjcK9lLg66oYNWaNO6S5-gzGzoHsz",
+    "LEANCLOUD_APP_KEY": "uM2u25jiNH6Le3CKTB9asrNI",
+    "LEANCLOUD_MASTER_KEY": "40SKtxGIlnH70v4QxiQzC5KK",
     "NEO4J_USERNAME": "neo4j",
-    "NEO4J_PASSWORD": "junlinguzhong"
+    "NEO4J_PASSWORD": "junlingual"
 }
 
