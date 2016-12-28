@@ -89,3 +89,7 @@ ENV/
 .ropeproject
 
 .idea/workspace.xml
+
+vendor/
+
+wikidata/node_modules/
