@@ -3,7 +3,8 @@
 from knowledge.lean_cloud.leancloud_manager import LeanCloudManager
 from knowledge.model.media import Media
 from knowledge.model.entity import Entity
-from knowledge.neo4j_methods import Neo4jManager
+from knowledge.model.media_entity import MediaEntity
+from knowledge.neo4j_manager import Neo4jManager
 
 class DataManager(object):
     def __init__(self):
@@ -35,9 +36,23 @@ class DataManager(object):
         return entities
 
     def add_media_entity_mapping(self, media_id, entity_id, keyword, weight, source):
-        #节点ID - 文章的ID - 关键词 - 关键词权重 - source
+        #文章的ID - 节点ID - 关键词 - 关键词权重 - source
         self.sqlDB.add_media_entity_mapping(media_id, entity_id, keyword, weight, source)
-
 
     def save(self):
         self.sqlDB.save_objects()
+
+    # 通过Media的ID查询MediaEntity
+    def find_media_mappings_from_media(self, media_id):
+        media_entities = self.sqlDB.fetch_media_entities_from_media(media_id)
+        return [MediaEntity().from_lc_object(obj) for obj in media_entities]
+
+    def find_entity_neighbors(self, entity_id, distance):
+        if distance == 0:
+            return Entity().from_id(entity_id)
+        else:
+            return self.graphDB.fin
+
+    def find_media_mappings_from_entity(self, entity_id):
+        media_entities = self.sqlDB.fetch_media_entities_from_entity(entity_id)
+        return [MediaEntity().from_lc_object(obj) for obj in media_entities]

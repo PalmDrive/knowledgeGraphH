@@ -1,7 +1,7 @@
 # coding=utf8
 
 import argparse
-import neo4j_methods as neo4j
+import neo4j_manager as neo4j
 from model.word import has_unknown_word
 from parse import GraphBuilder
 

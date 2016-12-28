@@ -8,3 +8,6 @@ class Entity(object):
         self.description_en = node['description_en']
         self.description_zh = node['description_zh']
         return self
+
+    def from_id(self, entity_id):
+        self.id = entity_id

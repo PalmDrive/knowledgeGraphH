@@ -136,6 +136,7 @@ class Neo4jManager(object):
     retained_result = list([r['n'] for r in result])
     return retained_result
 
+
 if __name__ == '__main__':
     db = GraphDatabase()
     print(db.find_to_entity({'name': u'送'}))

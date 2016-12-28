@@ -3,7 +3,6 @@
 from knowledge.config.config import load_config
 from knowledge.data_manager.data_manager import DataManager
 
-
 def map_media_to_entities():
     data_manager = DataManager()
     articles = data_manager.get_media()

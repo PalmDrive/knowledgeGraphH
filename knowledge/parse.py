@@ -1,7 +1,7 @@
 #coding=utf8
 import argparse
 
-import neo4j_methods as graph_db
+import neo4j_manager as graph_db
 from model.sentence import Sentence
 from ltp import Ltp
 from ltp import handle_request

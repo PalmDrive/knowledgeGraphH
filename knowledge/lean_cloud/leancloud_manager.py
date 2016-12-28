@@ -83,8 +83,29 @@ class LeanCloudManager(object):
             except leancloud.LeanCloudError as e:
                 logging.info('error %s' % str(e))
 
+    def fetch_media_entities_from_media(self, media_id):
 
+        MediaEntity = leancloud.Object.extend(CLASS_NAME_MEDIA_ENTITY)
 
+        Media = leancloud.Object.extend(CLASS_NAME_MEDIA)
+        media = Media.create_without_data(media_id)
+        query = MediaEntity.query.equal_to("media", media)
+
+        limit = 0
+        if CONFIG.ENV == 'development':
+            limit = 4
+
+        return self.batch_fetch(query, limit)
+
+    def fetch_media_entities_from_entity(self, entity_id):
+        MediaEntity = leancloud.Object.extend(CLASS_NAME_MEDIA_ENTITY)
+        query = MediaEntity.query.equal_to("entityId", entity_id)
+
+        limit = 0
+        if CONFIG.ENV == 'development':
+            limit = 4
+
+        return self.batch_fetch(query, limit)
 
 
 
