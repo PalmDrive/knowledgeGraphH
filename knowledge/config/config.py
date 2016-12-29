@@ -21,7 +21,6 @@ def load_config():
     config_file = os.path.join(pwd, "env.json")
     config_dict = json.load(open(config_file))
     init_config(config_dict)
-    print CONFIG
 
     logging.info("------current environment is \"%s\","
                  "using config file: \"%s\"" % (CONFIG.ENV, config_file))

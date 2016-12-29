@@ -47,11 +47,9 @@ class DataManager(object):
         media_entities = self.sqlDB.fetch_media_entities_from_media(media_id)
         return [MediaEntity().from_lc_object(obj) for obj in media_entities]
 
-    def find_entity_neighbors(self, entity_id, distance):
-        if distance == 0:
-            return Entity().from_id(entity_id)
-        else:
-            return self.graphDB.fin
+    def find_entity_neighbors(self, entity_id, max_distance):
+        neighbors = self.graphDB.find_neighbor_nodes(entity_id, max_distance)
+        return [(Entity().from_graph_node(n), d) for (n, d) in neighbors]
 
     def find_media_mappings_from_entity(self, entity_id):
         media_entities = self.sqlDB.fetch_media_entities_from_entity(entity_id)

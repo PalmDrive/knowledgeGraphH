@@ -15,63 +15,63 @@ class Neo4jManager(object):
   # properties = {"name": value, key: value, ...}
   def create_entity(self, properties):
 
-    clause = "MERGE (n {name: {name}"
+    query = "MERGE (n {name: {name}"
 
     for key in properties:
       if key != "name":
-        clause += ", %s: {%s}" % key
+        query += ", %s: {%s}" % key
 
-    clause += "}) RETURN n, n.name AS name"
+    query += "}) RETURN n, n.name AS name"
 
-    result = self.session.run(clause, properties)
+    result = self.session.run(query, properties)
     retained_result = list(result)
 
     return retained_result
 
   def create_edge(self, from_entity_name, to_entity_name, properties):
-    clause = "MATCH (a),(b) WHERE a.name = '%s' AND b.name = '%s' CREATE (a)-[r:%s {name: {name}" % (from_entity_name, to_entity_name, properties['name'])
+    query = "MATCH (a),(b) WHERE a.name = '%s' AND b.name = '%s' CREATE (a)-[r:%s {name: {name}" % (from_entity_name, to_entity_name, properties['name'])
 
     for key in properties:
       if key != "name":
-        clause += ", %s: {%s}" % key
+        query += ", %s: {%s}" % key
 
-    clause += "}]->(b) RETURN r, r.name AS name"
+    query += "}]->(b) RETURN r, r.name AS name"
 
-    result = self.session.run(clause, properties)
+    result = self.session.run(query, properties)
     retained_result = list(result)
     return retained_result
 
   def set_entity(self, entity_name, properties):
-    clause = "MATCH (n { name: '%s' }) SET " % entity_name
+    query = "MATCH (n { name: '%s' }) SET " % entity_name
     for key in properties:
-      clause += "n.%s = '%s', " % (key, properties[key])
+      query += "n.%s = '%s', " % (key, properties[key])
 
-    clause = clause[:-2]
-    clause += " RETURN n, n.name AS name"
+    query = query[:-2]
+    query += " RETURN n, n.name AS name"
 
-    result = self.session.run(clause)
+    result = self.session.run(query)
     retained_result = list(result)
     return retained_result
 
   def set_edge(self, edge_name, properties):
-    clause = "MATCH (sub)-[r:%s]->(obj) SET " % edge_name
+    query = "MATCH (sub)-[r:%s]->(obj) SET " % edge_name
     for key in properties:
-      clause += "r.%s = '%s', " % (key, properties[key])
+      query += "r.%s = '%s', " % (key, properties[key])
 
-    clause = clause[:-2]
-    clause += " RETURN r, r.name AS name"
+    query = query[:-2]
+    query += " RETURN r, r.name AS name"
 
-    result = self.session.run(clause)
+    result = self.session.run(query)
     retained_result = list(result)
     return retained_result
 
   def find_edges(self, edge_name, from_entity_name=None, to_entity_name=None, **kwargs):
-    clause = "MATCH (sub"
+    query = "MATCH (sub"
 
     if from_entity_name:
-      clause += " { name: '%s'})-[r:%s" % (from_entity_name, edge_name)
+      query += " { name: '%s'})-[r:%s" % (from_entity_name, edge_name)
     else:
-      clause += ")-[r:%s" % edge_name
+      query += ")-[r:%s" % edge_name
 
     condition = ""
     if kwargs:
@@ -81,38 +81,38 @@ class Neo4jManager(object):
 
     if len(condition) > 0:
       condition = condition[:-2]
-      clause += "{ " + condition + " }]->(obj"
+      query += "{ " + condition + " }]->(obj"
     else:
-      clause += "]->(obj"
+      query += "]->(obj"
 
     if to_entity_name:
-      clause += " { name: '%s'})" % to_entity_name
+      query += " { name: '%s'})" % to_entity_name
     else:
-      clause += ")"
+      query += ")"
 
-    clause += "RETURN r.name AS edge_name, r.IO AS IO, sub.name AS from_name, obj.name AS to_name"
+    query += "RETURN r.name AS edge_name, r.IO AS IO, sub.name AS from_name, obj.name AS to_name"
 
-    print 'clause : ' + clause
-    result = self.session.run(clause)
+    print 'query : ' + query
+    result = self.session.run(query)
     retained_result = list(result)
     return retained_result
 
   def find_from_entity(self, edge):
     name = edge['name']
 
-    clause = "MATCH (sub)-[r:%s]->(obj) RETURN sub AS entity, sub.name AS name" % name
+    query = "MATCH (sub)-[r:%s]->(obj) RETURN sub AS entity, sub.name AS name" % name
 
-    result = self.session.run(clause)
+    result = self.session.run(query)
     retained_result = list(result)
     return retained_result
 
   def find_to_entity(self, edge):
     name = edge['name']
 
-    clause = "MATCH (sub)-[r:%s]->(obj) RETURN obj AS entity, obj.name AS name" % name
+    query = "MATCH (sub)-[r:%s]->(obj) RETURN obj AS entity, obj.name AS name" % name
 
-    print 'clause : ' + clause
-    result = self.session.run(clause)
+    print 'query : ' + query
+    result = self.session.run(query)
     retained_result = list(result)
     return retained_result
 
@@ -120,8 +120,8 @@ class Neo4jManager(object):
     label_query = ""
     for label in labels:
       label_query += (":" + label)
-    clause = "MATCH (n%s) RETURN n, labels(n) AS labels" % label_query
-    result = self.session.run(clause)
+    query = "MATCH (n%s) RETURN n, labels(n) AS labels" % label_query
+    result = self.session.run(query)
     retained_result = list([(r['n'], r['labels']) for r in result])
     return retained_result
 
@@ -130,13 +130,20 @@ class Neo4jManager(object):
     for property in kwargs:
       predicates.append("'"+ kwargs[property] +"' in n." + property)
     predicate = ' OR '.join(predicates)
-    clause = "MATCH (n) WHERE %s RETURN n" % predicate
+    query = "MATCH (n) WHERE %s RETURN n" % predicate
 
-    result = self.session.run(clause)
+    result = self.session.run(query)
     retained_result = list([r['n'] for r in result])
     return retained_result
 
+  def find_neighbor_nodes(self, entity_id, max_distance):
+    query = "MATCH path = (n)-[*0..%d]-(m) WHERE n.item_id = '%s' RETURN m, length(path) AS distance" \
+            % (max_distance, entity_id)
+
+    result = self.session.run(query)
+    retained_result = list([(r['m'], r['distance']) for r in result])
+    return retained_result
 
 if __name__ == '__main__':
-    db = GraphDatabase()
+    db = Neo4jManager()
     print(db.find_to_entity({'name': u'送'}))

@@ -58,7 +58,7 @@ class LeanCloudManager(object):
         query = Media.query.equal_to("source", source)
         limit = 0
         if CONFIG.ENV == 'development':
-            limit = 4
+            limit = 7
 
         return self.batch_fetch(query, limit)
 
@@ -93,7 +93,7 @@ class LeanCloudManager(object):
 
         limit = 0
         if CONFIG.ENV == 'development':
-            limit = 4
+            limit = 10
 
         return self.batch_fetch(query, limit)
 
@@ -103,7 +103,7 @@ class LeanCloudManager(object):
 
         limit = 0
         if CONFIG.ENV == 'development':
-            limit = 4
+            limit = 10
 
         return self.batch_fetch(query, limit)
 
