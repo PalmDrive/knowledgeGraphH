@@ -6,12 +6,14 @@ const fs = require('fs'),
 
 const startImport = () => {
   const dumpPath = '/Users/yujunwu/Downloads/latest-all.json.gz',
-        lineLimit = 100,
+        lineBatch = 1000,
+        lineLimit = 100000,
         start = new Date(),
         stream = fs.createReadStream(dumpPath).pipe(zlib.createGunzip());
 
   let lineCount = 0,
-      itemCount = 0;
+      itemCount = 0,
+      cachedData = [];
 
   stream.setEncoding('utf8');
   const lineReader = readline.createInterface({
@@ -24,23 +26,37 @@ const startImport = () => {
     if (data !== '[' && data !== ']') {
       lineCount += 1;
       try {
-        KGItem.createFromWikiData(JSON.parse(data))
-          .then(results => {
-            itemCount += 1;
-            console.log(`In ${parseInt((new Date() - start) / 1000)}s ${itemCount} main items saved.`);
-          })
-          .catch(err => {
+        cachedData.push(JSON.parse(data));
 
-          });
+        if (lineCount > lineLimit) {
+          return lineReader.close();
+        }
+
+        if (lineCount % lineBatch === 0) {
+          lineReader.pause();
+          KGItem.write2csv(cachedData)
+            .then(res => {
+              console.log(`In ${parseInt((new Date() - start) / 1000)}s ${res[0].length} nodes saved.`);
+              itemCount += res[0].length;
+
+              cachedData = [];
+              lineReader.resume();
+            })
+            .catch(err => console.log('err:', err.stack || err));
+        }
+
+        // KGItem.createFromWikiData(JSON.parse(data))
+        //   .then(results => {
+        //     itemCount += 1;
+        //     console.log(`In ${parseInt((new Date() - start) / 1000)}s ${itemCount} main items saved.`);
+        //   })
+        //   .catch(err => {
+
+        //   });
       } catch (err) {
-        console.log('err:', err.stack || err);
+        console.log('catch exception:', err.stack || err);
         console.log('data:', data);
         lineReader.pause();
-      } finally {
-        if (lineCount >= lineLimit) {
-          console.log(`In ${formattedTime(new Date(), start)} mins ${lineCount} read finishes.`);
-          lineReader.pause();
-        }
       }
 
       // KGItem.createFromWikiData(JSON.parse(data));
@@ -51,7 +67,19 @@ const startImport = () => {
   });
 
   lineReader.on('close', () => {
-    console.log(`In ${formattedTime(new Date(), start)} mins reading all data finishes.`);
+    if (cachedData.length) {
+      console.log(`Process the last ${cachedData.length} data...`);
+      KGItem.write2csv(cachedData)
+        .then(res => {
+          cachedData = [];
+          console.log(`In ${parseInt((new Date() - start) / 1000)}s ${res[0].length} nodes saved.`);
+          itemCount += res[0].length;
+          console.log(`In ${formattedTime(new Date(), start)} mins reading all ${lineCount} lines finishes.`);
+        })
+        .catch(err => console.log('err:', err.stack || err));
+    } else {
+      console.log(`In ${formattedTime(new Date(), start)} mins reading all ${lineCount} finishes.`);
+    }
   });
 
   // stream.on('data', (data) => {
@@ -65,9 +93,9 @@ const startImport = () => {
   //   }
   // });
 
-  stream.on('close', () => {
-    console.log(`In ${formattedTime(new Date(), start)} mins reading all data finishes.`);
-  });
+  // stream.on('end', () => {
+  //   console.log(`In ${formattedTime(new Date(), start)} mins reading all data finishes.`);
+  // });
 
   stream.on('error', err => {
     console.log(`In ${formattedTime(new Date(), start)} mins error occurs:`, err.stack || err);
@@ -84,11 +112,12 @@ const formattedTime = (end, start) => {
 //   })
 //   .catch(err => console.log('err:', err.stack || err));
 
-db.cypher({
-  query: 'CREATE CONSTRAINT ON (item:Item) ASSERT item.item_id IS UNIQUE'
-}, (err, results) => {
-  if (err) return console.error('Create constraint on Item error:', err.stack || err);
-  startImport();
-});
+// db.cypher({
+//   query: 'CREATE CONSTRAINT ON (item:Item) ASSERT item.item_id IS UNIQUE'
+// }, (err, results) => {
+//   if (err) return console.error('Create constraint on Item error:', err.stack || err);
+//   startImport();
+// });
+startImport();
 
 
