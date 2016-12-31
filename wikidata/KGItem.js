@@ -66,13 +66,20 @@ class KGItem {
 
   static _getMainNode(data) {
     const getAliases = (lan) => {
-      const aliases = objectPath.get('data', 'aliases.zh');
+      const aliases = objectPath.get(data, `aliases.${lan}`);
       if (aliases && aliases.length) {
-        return aliases.map(obj => obj.value);
+        return aliases.map(obj => obj.value).join(';').replace(/\\/g, '');
       } else {
         return undefined;
       }
     };
+
+    if (data.id === 'Q49751') {
+      console.log('data aliases:');
+      console.log(data.aliases);
+    }
+
+    
 
     const json = {
       item_id: data.id,
@@ -86,7 +93,7 @@ class KGItem {
     return json;
   }
 
-  static write2csv(data) {
+  static write2csv(data, options) {
     const nodeFilePath = 'csv/items.csv',
           relsFilePath = 'csv/rels.csv',
           nodeFields = [
@@ -114,8 +121,8 @@ class KGItem {
               value: 'aliases_en'
             },
             {
-              lbel: 'aliases_zh:string[]',
-              value: 'aliases_en'
+              label: 'aliases_zh:string[]',
+              value: 'aliases_zh'
             }
           ],
           relFields = [':START_ID', ':END_ID', ':TYPE', 'property_id'],
@@ -126,10 +133,15 @@ class KGItem {
           }, []);
 
     const _write2csv = (filePath, data, fields) => {
+      if (!options.hasCSVColumnTitle) {
+        fs.appendFileSync(filePath, '\r\n');
+      }
+
       return new Promise((resolve, reject) => {
         fs.appendFile(filePath, json2csv({
           data,
-          fields
+          fields,
+          hasCSVColumnTitle: options.hasCSVColumnTitle
         }), err => {
           if (err) return reject(err);
           resolve(data);

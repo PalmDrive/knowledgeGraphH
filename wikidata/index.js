@@ -6,14 +6,15 @@ const fs = require('fs'),
 
 const startImport = () => {
   const dumpPath = '/Users/yujunwu/Downloads/latest-all.json.gz',
-        lineBatch = 1000,
-        lineLimit = 100000,
+        lineBatch = 2500,
+        lineLimit = Infinity,// 20000,
         start = new Date(),
         stream = fs.createReadStream(dumpPath).pipe(zlib.createGunzip());
 
   let lineCount = 0,
       itemCount = 0,
-      cachedData = [];
+      cachedData = [],
+      hasHeader = true;
 
   stream.setEncoding('utf8');
   const lineReader = readline.createInterface({
@@ -34,12 +35,15 @@ const startImport = () => {
 
         if (lineCount % lineBatch === 0) {
           lineReader.pause();
-          KGItem.write2csv(cachedData)
+          KGItem.write2csv(cachedData, {
+            hasCSVColumnTitle: hasHeader
+          })
             .then(res => {
               console.log(`In ${parseInt((new Date() - start) / 1000)}s ${res[0].length} nodes saved.`);
               itemCount += res[0].length;
 
               cachedData = [];
+              hasHeader = false;
               lineReader.resume();
             })
             .catch(err => console.log('err:', err.stack || err));
@@ -69,7 +73,9 @@ const startImport = () => {
   lineReader.on('close', () => {
     if (cachedData.length) {
       console.log(`Process the last ${cachedData.length} data...`);
-      KGItem.write2csv(cachedData)
+      KGItem.write2csv(cachedData, {
+        hasCSVColumnTitle: hasHeader
+      })
         .then(res => {
           cachedData = [];
           console.log(`In ${parseInt((new Date() - start) / 1000)}s ${res[0].length} nodes saved.`);
