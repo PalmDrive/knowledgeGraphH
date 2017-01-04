@@ -6,7 +6,7 @@ from knowledge.config.config import CONFIG
 
 class Neo4jManager(object):
   def __init__(self):
-    self.driver = GraphDatabase.driver("bolt://localhost:7687", auth=basic_auth(CONFIG.NEO4J_USERNAME, CONFIG.NEO4J_PASSWORD))
+    self.driver = GraphDatabase.driver("bolt://localhost", auth=basic_auth(CONFIG.NEO4J_USERNAME, CONFIG.NEO4J_PASSWORD))
     self.session = self.driver.session()
 
   def close(self):
