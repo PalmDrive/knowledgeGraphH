@@ -89,3 +89,8 @@ ENV/
 .ropeproject
 
 .idea/
+
+vendor/
+
+wikidata/node_modules/
+wikidata/csv/
